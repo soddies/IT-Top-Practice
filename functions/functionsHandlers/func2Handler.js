@@ -1,4 +1,6 @@
 const XLSX = require('xlsx');
+const fs = require("fs");
+const path = require("path");
 
 async function func2Handler(ctx, filePath) {
     try {
@@ -52,20 +54,39 @@ async function func2Handler(ctx, filePath) {
             let report = `*Найдено ${incorrectTopics.length} некорректных тем из ${dataRows.length} всего:*\n\n`;
 
             const examples = incorrectTopics.slice(0, 50);
+            const continueExamples = incorrectTopics.slice(50);
             
             examples.forEach((item, index) => {
                 report += `${index + 1}. *Строка ${item.row}:* ${item.topic.substring(0, 80)}${item.topic.length > 80 ? '...' : ''}\n`;
             });
 
-            if (incorrectTopics.length > 50) {
-                report += `\n*... и еще ${incorrectTopics.length - 50} тем(ы)*\n`;
-            }
+            if (continueExamples.length > 0) {
+                let fileContent = "Оставшиеся темы, несоответствующие формату: \n\n";
 
-            const percentage = ((incorrectTopics.length / dataRows.length) * 100).toFixed(1);
-            report += `\n*Статистика:* ${percentage}% ошибок`;
+                continueExamples.forEach((item, index) => {
+                    fileContent += `${index + 1 + 50}. Строка ${item.row}: ${item.topic.substring(0, 80)}${item.topic.length > 80 ? '...' : ''}\n`
+                });
 
-            await ctx.reply(report, {parse_mode: "Markdown"});
-            
+                const tempName = `Темы уроков.txt`;
+                const fileDir = path.dirname(filePath);
+                const outputPath = path.join(fileDir, tempName);
+
+                fs.writeFileSync(outputPath, fileContent, "utf8");
+
+                report += `\n*Еще ${continueExamples.length} с неправильной формулировкой*\n`;
+                report += `\n*Полный список сохранен в файл:* ${tempName}`;
+
+                await ctx.reply(report, {parse_mode: "Markdown"});
+                await ctx.replyWithDocument({
+                    source: fs.createReadStream(outputPath),
+                    filename: tempName
+                });
+
+            } 
+            else {
+                await ctx.reply(report, {parse_mode: "Markdown"});
+            } 
+
             await ctx.reply(
                 '*Примеры правильных форматов:*\n' +
                 '• Урок №1. Тема: название\n' +
@@ -79,7 +100,7 @@ async function func2Handler(ctx, filePath) {
         }
     } catch (error) {
         console.error('Ошибка в функции: ', error);
-        await ctx.reply(`Ошибка: ${error.message}`);
+        await ctx.reply(`Произошла ошибка при обработке тем`);
     }
 }
 
