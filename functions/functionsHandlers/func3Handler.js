@@ -17,7 +17,7 @@ async function func3Handlers(ctx, filePath) {
             const classroom = parseFloat(row[16]);
 
             if (!isNaN(homework) && !isNaN(classroom)) {
-                if (homework == 1 && classroom > 3) {
+                if (homework == 1 && classroom >= 3) {
                     allStudentsBad.push({
                         fio,
                         group,
