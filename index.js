@@ -96,12 +96,23 @@ bot.hears(['1', '2', '3', '4', '5', '6'], async (ctx) => {
 
 bot.hears('Вернуться в меню', (ctx) => {
     if (!ctx.session.isInFunctionMenu) {
+        ctx.session.isInFunctionMenu = true;
         return showMainMenu(ctx);
     }
 });
 
 bot.on('document', async(ctx) => {
-    if (!ctx.session.waitingForFile) return;
+    if (!ctx.session.waitingForFile || !ctx.session.currentFunctions) {
+        ctx.session.isInFunctionMenu = false;
+        await ctx.reply(
+            'Сначала выберите функцию из меню, а затем загрузите файл.\n' +
+            'Нажмите "Вернуться в меню" чтобы выбрать функцию.',
+            Markup.keyboard([
+                ['Вернуться в меню']
+            ]).resize()
+        );
+        return;
+    }
 
     const document = ctx.message.document;
     const ext = path.extname(document.file_name).toLowerCase();
@@ -112,7 +123,6 @@ bot.on('document', async(ctx) => {
 
     try {
         const fileLink = await ctx.telegram.getFileLink(document.file_id);
-
         const filePath = path.join(__dirname, 'temp.xlsx');
 
         const response = await axios.get(fileLink.href, {
@@ -121,41 +131,48 @@ bot.on('document', async(ctx) => {
 
         fs.writeFileSync(filePath, response.data);
 
-        if (ctx.session.currentFunctions === 'func1') {
-            await func1Handler(ctx, filePath);
+        ctx.session.waitingForFile = false;
+
+        switch(ctx.session.currentFunctions) {
+            case 'func1':
+                await func1Handler(ctx, filePath);
+                break;
+            case 'func2':
+                await func2Handler(ctx, filePath);
+                break;
+            case 'func3':
+                await func3Handler(ctx, filePath);
+                break;
+            case 'func4':
+                await func4Handler(ctx, filePath);
+                break;
+            case 'func5':
+                await func5Handler(ctx, filePath);
+                break;
+            case 'func6':
+                await func6Handler(ctx, filePath);
+                break;
+            default:
+                ctx.reply('Ошибка: неизвестная функция');
         }
 
-        if (ctx.session.currentFunctions === 'func2') {
-            await func2Handler(ctx, filePath);
+        ctx.session.currentFunctions = null;
+        
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
         }
-
-        if (ctx.session.currentFunctions === 'func3') {
-            await func3Handler(ctx, filePath);
-        }
-
-        if (ctx.session.currentFunctions === 'func4') {
-            await func4Handler(ctx, filePath);
-        }
-
-        if (ctx.session.currentFunctions === 'func5') {
-            await func5Handler(ctx, filePath);
-        }
-
-        if (ctx.session.currentFunctions === 'func6') {
-            await func6Handler(ctx, filePath);
-        }
-
-        fs.unlinkSync(filePath);
     }
     catch (err) {
         console.error(err);
+        ctx.session.waitingForFile = false;
+        ctx.session.currentFunctions = null;
         ctx.reply('Ошибка при обработке файла');
     }
 });
 
-bot.help((ctx) => ctx.reply('/start - перзапуск бота\n' + 
+bot.help((ctx) => ctx.reply('/start - перезапуск бота\n' + 
     '/about - информация о создателе'))
-bot.command('about', (ctx) => ctx.reply('Создателя зовут Екатерина Пчелкина, студенка IT-Top колледжа, группа 9/3-РПО-23/2.' +
+bot.command('about', (ctx) => ctx.reply('Создателя зовут Екатерина Пчелкина, студентка IT-Top колледжа, группа 9/3-РПО-23/2.' +
     ' Данный бот сделан в рамках учебной/производственной практики от колледжа.'))
 bot.launch()
 
