@@ -2,7 +2,7 @@ const XLSX = require("xlsx");
 const fs = require("fs");
 const path = require("path");
 
-async function func4Handlers(ctx, filePath) {
+async function func6Handlers(ctx, filePath) {
     try {
         const workbook = XLSX.readFile(filePath);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -75,4 +75,4 @@ async function func4Handlers(ctx, filePath) {
     }
 }
 
-module.exports = func4Handlers;
+module.exports = func6Handlers;
