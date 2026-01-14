@@ -6,7 +6,6 @@ const {
 
 const fs = require('fs');
 const axios = require('axios');
-
 const path = require('path')
 
 const func1 = require('./functions/defaultFunctions/func1')
@@ -38,12 +37,19 @@ bot.use(session({
     defaultSession: () => ({
         isInFunctionMenu: false,
         waitingForFile: false,
-        currentFunctions: null
+        currentFunctions: null,
+        lastFunctionSelected: null,
+        isProcessingFile: false
     })
 }))
 
 bot.start((ctx) => {
     ctx.session.isInFunctionMenu = false;
+    ctx.session.waitingForFile = false;
+    ctx.session.currentFunctions = null;
+    ctx.session.lastFunctionSelected = null;
+    ctx.session.isProcessingFile = false;
+    
     ctx.reply('Привет. Я - бот-помощник для учебной части IT-Top колледжа. Нажмите "Продолжить" чтобы перейти к функциям, которые я выполняю.',
     Markup.keyboard([
         ['Продолжить']
@@ -55,12 +61,21 @@ bot.start((ctx) => {
 
 bot.hears('Продолжить', (ctx) => {
     ctx.session.isInFunctionMenu = true;
+    ctx.session.waitingForFile = false;
+    ctx.session.currentFunctions = null;
+    ctx.session.lastFunctionSelected = null;
+    ctx.session.isProcessingFile = false;
+    
     return showMainMenu(ctx);
 })
 
-
 function showMainMenu(ctx) {
     ctx.session.isInFunctionMenu = true;
+    ctx.session.waitingForFile = false;
+    ctx.session.currentFunctions = null;
+    ctx.session.lastFunctionSelected = null;
+    ctx.session.isProcessingFile = false;
+    
     return ctx.reply(
         'Выберите функцию: \n' +
         '\n1. Отчет по выставленному расписанию' +
@@ -81,6 +96,10 @@ function showMainMenu(ctx) {
 bot.hears(['1', '2', '3', '4', '5', '6'], async (ctx) => {
     const btnNumber = ctx.message.text;
     ctx.session.isInFunctionMenu = false;
+    ctx.session.waitingForFile = false;
+    ctx.session.currentFunctions = null;
+    ctx.session.lastFunctionSelected = btnNumber;
+    ctx.session.isProcessingFile = false;
     
     if (functions[btnNumber]) {
         try {
@@ -97,13 +116,43 @@ bot.hears(['1', '2', '3', '4', '5', '6'], async (ctx) => {
 bot.hears('Вернуться в меню', (ctx) => {
     if (!ctx.session.isInFunctionMenu) {
         ctx.session.isInFunctionMenu = true;
+        ctx.session.waitingForFile = false;
+        ctx.session.currentFunctions = null;
+        ctx.session.lastFunctionSelected = null;
+        ctx.session.isProcessingFile = false;
+        
         return showMainMenu(ctx);
     }
 });
 
 bot.on('document', async(ctx) => {
-    if (!ctx.session.waitingForFile || !ctx.session.currentFunctions) {
+    if (ctx.session.isProcessingFile) {
+        return;
+    }
+
+    ctx.session.isProcessingFile = true;
+    
+    if (ctx.session.waitingForFile && ctx.session.currentFunctions) {
+        processFile(ctx);
+    } 
+
+    else if (ctx.session.lastFunctionSelected) {
+        const btnNumber = ctx.session.lastFunctionSelected;
+        
+        ctx.session.waitingForFile = true;
+        ctx.session.currentFunctions = `func${btnNumber}`;
         ctx.session.isInFunctionMenu = false;
+        
+        Markup.keyboard([
+            ['Вернуться в меню']
+        ]).resize()
+        
+        await processFile(ctx);
+    }
+    else {
+        ctx.session.isInFunctionMenu = false;
+        ctx.session.isProcessingFile = false;
+        
         await ctx.reply(
             'Сначала выберите функцию из меню, а затем загрузите файл.\n' +
             'Нажмите "Вернуться в меню" чтобы выбрать функцию.',
@@ -111,13 +160,15 @@ bot.on('document', async(ctx) => {
                 ['Вернуться в меню']
             ]).resize()
         );
-        return;
     }
+});
 
+async function processFile(ctx) {
     const document = ctx.message.document;
     const ext = path.extname(document.file_name).toLowerCase();
 
     if (ext !== '.xls' && ext !== '.xlsx') {
+        ctx.session.isProcessingFile = false;
         return ctx.reply('Неверный формат файла! Попробуйте еще раз');
     }
 
@@ -130,10 +181,11 @@ bot.on('document', async(ctx) => {
         });
 
         fs.writeFileSync(filePath, response.data);
+        const currentFunc = ctx.session.currentFunctions;
 
         ctx.session.waitingForFile = false;
-
-        switch(ctx.session.currentFunctions) {
+        
+        switch(currentFunc) {
             case 'func1':
                 await func1Handler(ctx, filePath);
                 break;
@@ -157,6 +209,7 @@ bot.on('document', async(ctx) => {
         }
 
         ctx.session.currentFunctions = null;
+        ctx.session.isProcessingFile = false;
         
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
@@ -164,11 +217,14 @@ bot.on('document', async(ctx) => {
     }
     catch (err) {
         console.error(err);
+        
         ctx.session.waitingForFile = false;
         ctx.session.currentFunctions = null;
+        ctx.session.isProcessingFile = false;
+        
         ctx.reply('Ошибка при обработке файла');
     }
-});
+}
 
 bot.help((ctx) => ctx.reply('/start - перезапуск бота\n' + 
     '/about - информация о создателе'))
