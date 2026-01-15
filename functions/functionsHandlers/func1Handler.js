@@ -1,4 +1,4 @@
-const XLSX = require('xlsx');
+import XLSX from 'xlsx';
 
 async function func1Handler(ctx, filePath) {
     try {
@@ -62,9 +62,9 @@ async function func1Handler(ctx, filePath) {
             const subjects = allGroupsData[groupName];
             if (Object.keys(subjects).length === 0) continue;
 
-            fullReport += `*👥 Группа:* \`${groupName}\`\n`;
+            fullReport += `*Группа:* \`${groupName}\`\n`;
             for (const [sub, count] of Object.entries(subjects)) {
-                fullReport += `   ▫️ ${sub}: *${count} пар(ы)*\n`;
+                fullReport += `${sub}: *${count} пар(ы)*\n`;
             }
             fullReport += `\n`;
         }
@@ -79,8 +79,8 @@ async function func1Handler(ctx, filePath) {
         }
         
         fullReport += `*Итоговая статистика:*\n`;
-        fullReport += `• Всего групп: ${totalGroups}\n`;
-        fullReport += `• Всего пар: ${totalPairs}\n`;
+        fullReport += `Всего групп: ${totalGroups}\n`;
+        fullReport += `Всего пар: ${totalPairs}\n`;
 
         await ctx.reply(fullReport, { parse_mode: 'Markdown' });
 
@@ -90,4 +90,4 @@ async function func1Handler(ctx, filePath) {
     }
 }
 
-module.exports = func1Handler;
+export default func1Handler;
