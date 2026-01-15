@@ -37,7 +37,7 @@ bot.use(session({
     defaultSession: () => ({
         isInFunctionMenu: false,
         waitingForFile: false,
-        currentFunctions: null,
+        currentFunction: null,
         lastFunctionSelected: null,
         isProcessingFile: false
     })
@@ -46,7 +46,7 @@ bot.use(session({
 bot.start((ctx) => {
     ctx.session.isInFunctionMenu = false;
     ctx.session.waitingForFile = false;
-    ctx.session.currentFunctions = null;
+    ctx.session.currentFunction = null;
     ctx.session.lastFunctionSelected = null;
     ctx.session.isProcessingFile = false;
     
@@ -62,7 +62,7 @@ bot.start((ctx) => {
 bot.hears('Продолжить', (ctx) => {
     ctx.session.isInFunctionMenu = true;
     ctx.session.waitingForFile = false;
-    ctx.session.currentFunctions = null;
+    ctx.session.currentFunction = null;
     ctx.session.lastFunctionSelected = null;
     ctx.session.isProcessingFile = false;
     
@@ -72,7 +72,7 @@ bot.hears('Продолжить', (ctx) => {
 function showMainMenu(ctx) {
     ctx.session.isInFunctionMenu = true;
     ctx.session.waitingForFile = false;
-    ctx.session.currentFunctions = null;
+    ctx.session.currentFunction = null;
     ctx.session.lastFunctionSelected = null;
     ctx.session.isProcessingFile = false;
     
@@ -97,7 +97,7 @@ bot.hears(['1', '2', '3', '4', '5', '6'], async (ctx) => {
     const btnNumber = ctx.message.text;
     ctx.session.isInFunctionMenu = false;
     ctx.session.waitingForFile = false;
-    ctx.session.currentFunctions = null;
+    ctx.session.currentFunction = btnNumber;
     ctx.session.lastFunctionSelected = btnNumber;
     ctx.session.isProcessingFile = false;
     
@@ -117,7 +117,7 @@ bot.hears('Вернуться в меню', (ctx) => {
     if (!ctx.session.isInFunctionMenu) {
         ctx.session.isInFunctionMenu = true;
         ctx.session.waitingForFile = false;
-        ctx.session.currentFunctions = null;
+        ctx.session.currentFunction = null;
         ctx.session.lastFunctionSelected = null;
         ctx.session.isProcessingFile = false;
         
@@ -132,20 +132,16 @@ bot.on('document', async(ctx) => {
 
     ctx.session.isProcessingFile = true;
     
-    if (ctx.session.waitingForFile && ctx.session.currentFunctions) {
-        processFile(ctx);
+    if (ctx.session.waitingForFile && ctx.session.currentFunction) {
+        await processFile(ctx);
     } 
 
     else if (ctx.session.lastFunctionSelected) {
         const btnNumber = ctx.session.lastFunctionSelected;
         
         ctx.session.waitingForFile = true;
-        ctx.session.currentFunctions = `func${btnNumber}`;
+        ctx.session.currentFunction = btnNumber;
         ctx.session.isInFunctionMenu = false;
-        
-        Markup.keyboard([
-            ['Вернуться в меню']
-        ]).resize()
         
         await processFile(ctx);
     }
@@ -181,34 +177,34 @@ async function processFile(ctx) {
         });
 
         fs.writeFileSync(filePath, response.data);
-        const currentFunc = ctx.session.currentFunctions;
+        const currentFunc = ctx.session.currentFunction;
 
         ctx.session.waitingForFile = false;
         
         switch(currentFunc) {
-            case 'func1Recipient':
+            case '1':
                 await func1Handler(ctx, filePath);
                 break;
-            case 'func2Recipient':
+            case '2':
                 await func2Handler(ctx, filePath);
                 break;
-            case 'func3Recipient':
+            case '3':
                 await func3Handler(ctx, filePath);
                 break;
-            case 'func4Recipient':
+            case '4':
                 await func4Handler(ctx, filePath);
                 break;
-            case 'func5Recipient':
+            case '5':
                 await func5Handler(ctx, filePath);
                 break;
-            case 'func6Recipient':
+            case '6':
                 await func6Handler(ctx, filePath);
                 break;
             default:
                 ctx.reply('Ошибка: неизвестная функция');
         }
 
-        ctx.session.currentFunctions = null;
+        ctx.session.currentFunction = null;
         ctx.session.isProcessingFile = false;
         
         if (fs.existsSync(filePath)) {
@@ -219,7 +215,7 @@ async function processFile(ctx) {
         console.error(err);
         
         ctx.session.waitingForFile = false;
-        ctx.session.currentFunctions = null;
+        ctx.session.currentFunction = null;
         ctx.session.isProcessingFile = false;
         
         ctx.reply('Ошибка при обработке файла');
