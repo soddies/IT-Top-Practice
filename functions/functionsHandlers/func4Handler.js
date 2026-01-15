@@ -1,4 +1,4 @@
-const XLSX = require('xlsx');
+import XLSX from 'xlsx'
 
 async function func4Handler(ctx, filePath) {
     try {
@@ -44,4 +44,4 @@ async function func4Handler(ctx, filePath) {
     }
 }
 
-module.exports = func4Handler;
+export default func4Handler
