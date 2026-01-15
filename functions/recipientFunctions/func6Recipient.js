@@ -1,7 +1,7 @@
 // отчет по сданным ДЗ
-const { Markup } = require('telegraf');
+import { Markup } from "telegraf";
 
-module.exports = async (ctx) => {
+export default async (ctx) => {
     ctx.session.isInFunctionMenu = false;
     ctx.session.waitingForFile = true;
     ctx.session.currentFunctions = 'func6';
