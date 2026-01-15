@@ -1,6 +1,6 @@
-const XLSX = require("xlsx");
-const fs = require("fs");
-const path = require("path");
+import XLSX from 'xlsx'
+import fs from 'fs'
+import path from 'path'
 
 async function func6Handler(ctx, filePath) {
     try {
@@ -75,4 +75,4 @@ async function func6Handler(ctx, filePath) {
     }
 }
 
-module.exports = func6Handler;
+export default func6Handler
