@@ -1,26 +1,21 @@
-const {
-    Telegraf, 
-    Markup,
-    session
-} = require('telegraf')
+import { Telegraf, Markup, session } from 'telegraf'
+import fs from 'fs';
+import axios from 'axios';
+import path from 'path';
 
-const fs = require('fs');
-const axios = require('axios');
-const path = require('path')
+import func1Recipient from './functions/recipientFunctions/func1Recipient.js';
+import func2Recipient from './functions/recipientFunctions/func2Recipient.js';
+import func3Recipient from './functions/recipientFunctions/func3Recipient.js';
+import func4Recipient from './functions/recipientFunctions/func4Recipient.js';
+import func5Recipient from './functions/recipientFunctions/func5Recipient.js';
+import func6Recipient from './functions/recipientFunctions/func6Recipient.js';
 
-const func1Recipient = require('./functions/recipientFunctions/func1Recipient')
-const func2Recipient = require('./functions/recipientFunctions/func2Recipient')
-const func3Recipient = require('./functions/recipientFunctions/func3Recipient')
-const func4Recipient = require('./functions/recipientFunctions/func4Recipient')
-const func5Recipient = require('./functions/recipientFunctions/func5Recipient')
-const func6Recipient = require('./functions/recipientFunctions/func6Recipient')
-
-const func1Handler = require('./functions/functionsHandlers/func1Handler')
-const func2Handler = require('./functions/functionsHandlers/func2Handler')
-const func3Handler = require('./functions/functionsHandlers/func3Handler')
-const func4Handler = require('./functions/functionsHandlers/func4Handler')
-const func5Handler = require('./functions/functionsHandlers/func5Handler')
-const func6Handler = require('./functions/functionsHandlers/func6Handler')
+import func1Handler from './functions/functionsHandlers/func1Handler.js';
+import func2Handler from './functions/functionsHandlers/func2Handler.js';
+import func3Handler from './functions/functionsHandlers/func3Handler.js';
+import func4Handler from './functions/functionsHandlers/func4Handler.js';
+import func5Handler from './functions/functionsHandlers/func5Handler.js';
+import func6Handler from './functions/functionsHandlers/func6Handler.js';
 
 const functions = {
     '1': func1Recipient,
@@ -76,20 +71,35 @@ function showMainMenu(ctx) {
     ctx.session.lastFunctionSelected = null;
     ctx.session.isProcessingFile = false;
     
-    return ctx.reply(
+    const menuText = 
         'Выберите функцию: \n' +
         '\n1. Отчет по выставленному расписанию' +
         '\n2. Отчет по темам занятия' +
         '\n3. Отчет по студентам' +
         '\n4. Отчет по посещаемости студентов' +
         '\n5. Отчет по проверенным ДЗ' +
-        '\n6. Отчет по сданным ДЗ',
-
-        Markup.keyboard([
-            ['1', '2'],
-            ['3', '4'],
-            ['5', '6']
-        ]).resize()
+        '\n6. Отчет по сданным ДЗ' + 
+        '\n\n*ВАЖНО!!!*\n' +
+        '*1 - файл "Расписание групп"*' +
+        '\n*2 - файл "Темы уроков"*' +
+        '\n*3 - файл "Отчет по студентам"*' +
+        '\n*4 - файл "Посещаемость по преподавателям"*' +
+        '\n*5 - файл "Отчет по домашним заданиям"*' +
+        '\n*6 - файл "Отчет по студентам"*';
+    
+    return ctx.reply(
+        menuText,
+        {
+            parse_mode: "Markdown",
+            reply_markup: {
+                keyboard: [
+                    ['1', '2'],
+                    ['3', '4'],
+                    ['5', '6']
+                ],
+                resize_keyboard: true
+            }
+        }
     );
 }
 
@@ -170,7 +180,10 @@ async function processFile(ctx) {
 
     try {
         const fileLink = await ctx.telegram.getFileLink(document.file_id);
-        const filePath = path.join(__dirname, 'temp.xlsx');
+
+        const os = await import('os');
+        const tempDir = os.tmpdir();
+        const filePath = path.join(tempDir, `temp_${Date.now()}.xlsx`);
 
         const response = await axios.get(fileLink.href, {
             responseType: 'arraybuffer'
