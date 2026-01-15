@@ -1,12 +1,12 @@
-// отчет по студентам
-const { Markup } = require('telegraf');
+// отчет по темам занятия
+import { Markup } from "telegraf";
 
-module.exports = async (ctx) => {
+export default async (ctx) => {
     ctx.session.isInFunctionMenu = false;
     ctx.session.waitingForFile = true;
-    ctx.session.currentFunctions = 'func3';
+    ctx.session.currentFunctions = 'func2';
     
-    await ctx.reply('*Вы выбрали: 3*', {parse_mode: "Markdown"});
+    await ctx.reply('*Вы выбрали: 2*', {parse_mode: "Markdown"});
     await ctx.reply("Пожалуйста, загрузите файл в формате XLS/XLSX", 
         Markup.keyboard([
             ['Вернуться в меню']
