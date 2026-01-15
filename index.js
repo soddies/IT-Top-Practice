@@ -8,27 +8,27 @@ const fs = require('fs');
 const axios = require('axios');
 const path = require('path')
 
-const func1 = require('./functions/defaultFunctions/func1')
-const func2 = require('./functions/defaultFunctions/func2')
-const func3 = require('./functions/defaultFunctions/func3')
-const func4 = require('./functions/defaultFunctions/func4')
-const func5 = require('./functions/defaultFunctions/func5')
-const func6 = require('./functions/defaultFunctions/func6')
+const func1Recipient = require('./functions/recipientFunctions/func1Recipient')
+const func2Recipient = require('./functions/recipientFunctions/func2Recipient')
+const func3Recipient = require('./functions/recipientFunctions/func3Recipient')
+const func4Recipient = require('./functions/recipientFunctions/func4Recipient')
+const func5Recipient = require('./functions/recipientFunctions/func5Recipient')
+const func6Recipient = require('./functions/recipientFunctions/func6Recipient')
 
-const func1Handler = require('./functions/fucntionsHandlers/func1Handler')
-const func2Handler = require('./functions/fucntionsHandlers/func2Handler')
-const func3Handler = require('./functions/fucntionsHandlers/func3Handler')
-const func4Handler = require('./functions/fucntionsHandlers/func4Handler')
-const func5Handler = require('./functions/fucntionsHandlers/func5Handler')
-const func6Handler = require('./functions/fucntionsHandlers/func6Handler')
+const func1Handler = require('./functions/functionsHandlers/func1Handler')
+const func2Handler = require('./functions/functionsHandlers/func2Handler')
+const func3Handler = require('./functions/functionsHandlers/func3Handler')
+const func4Handler = require('./functions/functionsHandlers/func4Handler')
+const func5Handler = require('./functions/functionsHandlers/func5Handler')
+const func6Handler = require('./functions/functionsHandlers/func6Handler')
 
 const functions = {
-    '1': func1,
-    '2': func2,
-    '3': func3,
-    '4': func4,
-    '5': func5,
-    '6': func6,
+    '1': func1Recipient,
+    '2': func2Recipient,
+    '3': func3Recipient,
+    '4': func4Recipient,
+    '5': func5Recipient,
+    '6': func6Recipient,
 }
 
 const bot = new Telegraf('8404536921:AAF93gBUmUhkwy0DIu6i-M-MX-C4jAha_yY')
@@ -186,22 +186,22 @@ async function processFile(ctx) {
         ctx.session.waitingForFile = false;
         
         switch(currentFunc) {
-            case 'func1':
+            case 'func1Recipient':
                 await func1Handler(ctx, filePath);
                 break;
-            case 'func2':
+            case 'func2Recipient':
                 await func2Handler(ctx, filePath);
                 break;
-            case 'func3':
+            case 'func3Recipient':
                 await func3Handler(ctx, filePath);
                 break;
-            case 'func4':
+            case 'func4Recipient':
                 await func4Handler(ctx, filePath);
                 break;
-            case 'func5':
+            case 'func5Recipient':
                 await func5Handler(ctx, filePath);
                 break;
-            case 'func6':
+            case 'func6Recipient':
                 await func6Handler(ctx, filePath);
                 break;
             default:
