@@ -1,6 +1,6 @@
 const XLSX = require('xlsx');
 
-async function func3Handlers(ctx, filePath) {
+async function func3Handler(ctx, filePath) {
     try {
         const workbook = XLSX.readFile(filePath);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -51,4 +51,4 @@ async function func3Handlers(ctx, filePath) {
     }
 }
 
-module.exports = func3Handlers;
+module.exports = func3Handler;
