@@ -34,7 +34,6 @@ beforeEach(() => {
     console.error = jest.fn();
 });
 
-// 4. Тесты
 describe('func3Handler', () => {
     test('должен находить студентов с homework=1 и classroom>=3', async () => {
         const mockExcelData = [
@@ -222,4 +221,5 @@ describe('func3Handler', () => {
         expect(message).not.toMatch(/Студент 3/);
         expect(message).not.toMatch(/Студент 4/);
     });
+
 });
