@@ -42,7 +42,7 @@ async function func3Handler(ctx, filePath) {
             await ctx.reply(message, {parse_mode: "Markdown"});
         }
         else {
-            await ctx.reply("Студенты с низкими оценка не найдены.");
+            await ctx.reply("Студенты с низкими оценками не найдены.");
         }
     }
     catch (error) {
