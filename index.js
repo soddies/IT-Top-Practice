@@ -190,8 +190,17 @@ async function processFile(ctx) {
         });
 
         fs.writeFileSync(filePath, response.data);
-        const currentFunc = ctx.session.currentFunction;
 
+        const fileNotEmpty = await checkExcelFileContent(filePath);
+        if (!fileNotEmpty) {
+            ctx.session.isProcessingFile = false;
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+            return ctx.reply('Файл не содержит данных или содержит только заголовки. Загрузите файл с данными.');
+        }
+
+        const currentFunc = ctx.session.currentFunction;
         ctx.session.waitingForFile = false;
         
         switch(currentFunc) {
@@ -225,13 +234,69 @@ async function processFile(ctx) {
         }
     }
     catch (err) {
-        console.error(err);
+        console.error('Ошибка обработки файла:', err);
         
         ctx.session.waitingForFile = false;
         ctx.session.currentFunction = null;
         ctx.session.isProcessingFile = false;
         
-        ctx.reply('Ошибка при обработке файла');
+        if (err.message && err.message.includes('пустой')) {
+            ctx.reply(err.message);
+        } else {
+            ctx.reply('Ошибка при обработке файла. Пожалуйста, попробуйте еще раз.');
+        }
+    }
+}
+
+async function checkExcelFileContent(filePath) {
+    try {
+        const XLSX = await import('xlsx');
+        
+        const workbook = XLSX.default.readFile(filePath);
+        
+        if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+            console.log('Файл не содержит листов');
+            return false;
+        }
+        
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        if (!worksheet) {
+            console.log('Лист не найден');
+            return false;
+        }
+        
+        const data = XLSX.default.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        console.log('Размер данных в файле:', data.length, 'строк');
+        
+        if (data.length <= 1) {
+            console.log('Файл содержит только заголовки или пуст');
+            return false;
+        }
+        
+        for (let i = 1; i < Math.min(data.length, 50); i++) { 
+            const row = data[i];
+            if (Array.isArray(row)) {
+                const hasData = row.some(cell => {
+                    return cell !== null && 
+                           cell !== undefined && 
+                           cell !== '' && 
+                           String(cell).trim() !== '';
+                });
+                
+                if (hasData) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+        
+    } catch (error) {
+        console.error('Ошибка проверки Excel файла:', error);
+        return false;
     }
 }
 
